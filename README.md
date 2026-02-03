@@ -22,11 +22,14 @@ npm install molex-env
 
 ## Quick start
 ```js
+// simplest usage
+require('molex-env').load();
+
+// more detailed usage
 const { load } = require('molex-env');
 
 const result = load({
   profile: 'prod',
-  export: true,
   strict: true,
   schema: {
     PORT: 'number',
@@ -37,6 +40,7 @@ const result = load({
 
 console.log(result.parsed.PORT);
 console.log(result.origins.SERVICE_URL);
+console.log(process.menv.PORT);
 ```
 
 ## Setup
@@ -72,8 +76,9 @@ Load, merge, parse, and validate .menv files.
 - schema: allowed keys, types, defaults, required
 - strict: reject unknown keys, duplicates, and invalid lines
 - cast: true | false | { boolean, number, json, date }
-- export: write values to process.env
+- exportEnv: write values to process.env
 - override: override existing process.env values
+- attach: attach parsed values to process.menv (default true)
 - freeze: deep-freeze parsed config (default true)
 - onWarning: function(info) for non-strict duplicates
 
@@ -166,6 +171,7 @@ load({ freeze: false });
 ## Notes
 - Use .menv.local for machine-specific values
 - Use strict mode to detect surprises early
+- Parsed values are attached to process.menv by default (disable with attach: false)
 
 ## Example project
 An example app is included in examples/basic.

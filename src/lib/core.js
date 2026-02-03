@@ -30,7 +30,7 @@ function buildState()
  */
 function exportToEnv(values, options)
 {
-    if (!options.export) return;
+     if (!options.exportEnv) return;
     for (const [key, value] of Object.entries(values))
     {
         if (!options.override && Object.prototype.hasOwnProperty.call(process.env, key))
@@ -39,6 +39,18 @@ function exportToEnv(values, options)
         }
         process.env[key] = value === undefined ? '' : String(value);
     }
+}
+
+/**
+ * Attach parsed values to process.menv unless disabled.
+ * @param {object} values
+ * @param {object} options
+ * @returns {void}
+ */
+function attachToProcess(values, options)
+{
+    if (options.attach === false) return;
+    process.menv = values;
 }
 
 /**
@@ -80,6 +92,8 @@ function load(options = {})
     {
         deepFreeze(state.values);
     }
+
+    attachToProcess(state.values, options);
 
     return {
         parsed: state.values,

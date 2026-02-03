@@ -7,7 +7,6 @@ const result = load({
   cwd: __dirname,
   profile: 'dev',
   strict: true,
-  export: true,
   schema: {
     PORT: { type: 'number', default: 3000 },
     DEBUG: { type: 'boolean', default: false },
@@ -19,7 +18,7 @@ const result = load({
 
 console.log('Parsed config:', result.parsed);
 console.log('Origin for SERVICE_URL:', result.origins.SERVICE_URL);
-console.log('process.env.PORT:', process.env.PORT);
+console.log('process.menv.PORT:', process.menv.PORT);
 console.log('Example path:', path.join(__dirname, '.menv'));
 
 try {

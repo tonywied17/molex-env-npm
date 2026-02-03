@@ -72,10 +72,10 @@ test('load exports to process.env with override option', () =>
 
     try
     {
-        load({ cwd: dir, export: true, override: false });
+        load({ cwd: dir, exportEnv: true, override: false });
         assert.strictEqual(process.env.PORT, '1111');
 
-        load({ cwd: dir, export: true, override: true });
+        load({ cwd: dir, exportEnv: true, override: true });
         assert.strictEqual(process.env.PORT, '3000');
     } finally
     {
@@ -85,6 +85,53 @@ test('load exports to process.env with override option', () =>
         } else
         {
             process.env.PORT = original;
+        }
+    }
+});
+
+test('load attaches parsed values to process.menv by default', () =>
+{
+    const dir = makeTempDir();
+    fs.writeFileSync(path.join(dir, '.menv'), 'PORT=3000');
+
+    const original = process.menv;
+
+    try
+    {
+        const result = load({ cwd: dir });
+        assert.strictEqual(process.menv, result.parsed);
+        assert.strictEqual(process.menv.PORT, 3000);
+    } finally
+    {
+        if (original === undefined)
+        {
+            delete process.menv;
+        } else
+        {
+            process.menv = original;
+        }
+    }
+});
+
+test('load can skip attaching to process.menv', () =>
+{
+    const dir = makeTempDir();
+    fs.writeFileSync(path.join(dir, '.menv'), 'PORT=3000');
+
+    const original = process.menv;
+
+    try
+    {
+        load({ cwd: dir, attach: false });
+        assert.strictEqual(process.menv, original);
+    } finally
+    {
+        if (original === undefined)
+        {
+            delete process.menv;
+        } else
+        {
+            process.menv = original;
         }
     }
 });
