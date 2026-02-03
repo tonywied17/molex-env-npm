@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "Native .menv loader with profiles, typing, and origin tracking.",
   "main": "src/index.js",
+  "files": [
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "test": "node --test"
   },
@@ -15,5 +20,13 @@
     "native"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tonywied17/molex-env.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tonywied17/molex-env/issues"
+  },
+  "homepage": "https://github.com/tonywied17/molex-env#readme"
 }
