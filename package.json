@@ -1,0 +1,19 @@
+{
+  "name": "molex-env",
+  "version": "0.1.0",
+  "description": "Native .menv loader with profiles, typing, and origin tracking.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "env",
+    "dotenv",
+    "menv",
+    "config",
+    "profile",
+    "native"
+  ],
+  "author": "",
+  "license": "MIT"
+}
