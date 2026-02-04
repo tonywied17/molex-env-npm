@@ -1,5 +1,5 @@
 {
-  "name": "molex-env-npm",
+  "name": "molex-env",
   "version": "0.2.3",
   "description": "Native .menv loader with profiles, typing, and origin tracking.",
   "main": "src/index.js",
