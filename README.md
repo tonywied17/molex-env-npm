@@ -16,6 +16,7 @@
 - **Type-safe parsing** - Automatic conversion of booleans, numbers, JSON, and dates
 - **Strict validation** - Schema enforcement with required fields and type checking
 - **Origin tracking** - Know exactly which file and line each value came from
+- **Debug mode** - See which files override values during cascading
 - **Immutable config** - Deep-freeze protection prevents accidental modifications
 - **Live reload** - Watch mode automatically reloads on file changes
 - **Deterministic merging** - Predictable cascading from base to profile files
@@ -139,6 +140,18 @@ Files are loaded and merged in this order (later files override earlier ones):
 Final result: PORT=9000, DEBUG=false
 ```
 
+**Debug mode** - Use `debug: true` to see which files override values:
+```javascript
+load({ profile: 'prod', debug: true });
+// Console output:
+// [molex-env] Override: DEBUG
+//   Previous: .menv:2 = true
+//   New:      .menv.local:1 = false
+// [molex-env] Override: PORT
+//   Previous: .menv.local:3 = 3000
+//   New:      .menv.prod:1 = 8080
+```
+
 ## API Reference
 
 ### `load(options)` → `Object`
@@ -153,12 +166,13 @@ Load, merge, parse, and validate .menv files. This is the primary method you'll 
 | `profile` | `string` | `undefined` | Profile name for `.menv.{profile}` files |
 | `files` | `Array<string>` | Auto-detected | Custom file list (absolute or relative to cwd) |
 | `schema` | `Object` | `{}` | Schema definition for validation and typing |
-| `strict` | `boolean` | `false` | Reject unknown keys, duplicates, and invalid lines |
+| `strict` | `boolean` | `false` | Reject unknown keys, within-file duplicates, and invalid lines |
 | `cast` | `boolean\|Object` | `true` | Enable/disable type casting (see Type Casting) |
 | `exportEnv` | `boolean` | `false` | Write parsed values to `process.env` |
 | `override` | `boolean` | `false` | Override existing `process.env` values |
 | `attach` | `boolean` | `true` | Attach parsed values to `process.menv` |
 | `freeze` | `boolean` | `true` | Deep-freeze the parsed config object |
+| `debug` | `boolean` | `false` | Log file precedence overrides to console |
 | `onWarning` | `Function` | `undefined` | Callback for non-strict warnings |
 
 **Returns:**
@@ -213,9 +227,11 @@ Parse a string of .menv content without loading files. Useful for testing or pro
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `schema` | `Object` | `{}` | Schema definition for validation |
-| `strict` | `boolean` | `false` | Enable strict validation |
+| `strict` | `boolean` | `false` | Enable strict validation (rejects unknown keys, within-file duplicates, invalid lines) |
 | `cast` | `boolean\|Object` | `true` | Enable/disable type casting |
 | `freeze` | `boolean` | `true` | Deep-freeze the result |
+
+> **Note:** The `parse()` function processes a single string, so the `debug` option for file precedence and cross-file features don't apply here.
 
 **Returns:**
 
@@ -452,9 +468,10 @@ Strict mode provides rigorous validation to catch configuration errors early.
 
 When `strict: true`:
 - ❌ **Unknown keys** - Keys not in schema are rejected
-- ❌ **Duplicate keys** - Same key in multiple files throws error
+- ❌ **Duplicate keys** - Same key appearing twice **in the same file** throws error
+  - **Note:** File precedence still works - different files can define the same key
 - ❌ **Invalid lines** - Malformed lines throw errors
-- ❌ **Type mismatches** - Values that can't be parsed as specified type
+- ✅ **Type validation** - When schema is present, type mismatches throw errors (enabled by default with schema)
 
 **Example:**
 
@@ -473,27 +490,55 @@ load({
 });
 ```
 
+**Valid with strict mode (different files):**
+```javascript
+// .menv
+PORT=3000
+
+// .menv.prod
+PORT=8080  // ✅ OK - overrides from different file
+
+load({ profile: 'prod', strict: true });
+// Result: PORT=8080
+```
+
+**Invalid with strict mode (same file):**
+```javascript
+// .menv
+PORT=3000
+PORT=8080  // ❌ ERROR - duplicate in same file
+
+load({ strict: true });  // Throws error
+```
+
 ### Non-Strict Mode (Default)
 
-Without strict mode:
+Without strict mode, the file precedence feature works as intended:
 - ✅ Unknown keys are allowed and parsed
-- ✅ Duplicates override (later files win)
+- ✅ **Duplicate keys override** - Later files can override keys from earlier files
 - ✅ Invalid lines are skipped
-- ⚠️  Warnings can be logged via `onWarning` callback
+- ⚠️  Warnings can be logged via `onWarning` callback for within-file duplicates
 
 **Example with warning handler:**
 
 ```javascript
+// .menv file with duplicate keys
+// PORT=3000
+// PORT=8080
+
 load({
-  schema: { PORT: 'number' },
   strict: false,
   onWarning: (info) => {
-    console.warn(`Warning: ${info.key} redefined`);
-    console.warn(`  Previous: ${info.previous.file}:${info.previous.line}`);
-    console.warn(`  New:      ${info.next.file}:${info.next.line}`);
+    if (info.type === 'duplicate') {
+      console.warn(`Warning: Duplicate key '${info.key}' in ${info.file}:${info.line}`);
+    }
   }
 });
+// Output: Warning: Duplicate key 'PORT' in .menv:2
+// Result: PORT=8080 (last value wins)
 ```
+
+**Tip:** Use `debug: true` to see cross-file overrides (file precedence), or `onWarning` to catch within-file duplicates.
 
 ---
 
@@ -710,7 +755,8 @@ Production:    .menv + .menv.prod + .menv.prod.local (secrets)
 ### Security Tips
 
 - ✅ **DO** use `.menv.local` for secrets and add to `.gitignore`
-- ✅ **DO** use `strict: true` in production to catch misconfigurations
+- ✅ **DO** use `strict: true` in production to catch unknown keys and configuration errors
+- ✅ **DO** use `debug: true` during development to understand file precedence
 - ✅ **DO** validate sensitive values (URLs, ports, etc.) after loading
 - ❌ **DON'T** commit production secrets to git
 - ❌ **DON'T** use `exportEnv: true` if you need immutable config
@@ -784,6 +830,22 @@ METADATA={"key":"value"}
 
 # Valid date (ISO 8601)
 START_DATE=2026-02-02
+```
+
+### Understanding which file sets a value
+
+**Problem:** Not sure which file is providing a specific config value.
+
+**Solution:** Use `debug: true` to see file precedence in action:
+```javascript
+load({ profile: 'prod', debug: true });
+// Shows console output for each override
+```
+
+Or check the `origins` object:
+```javascript
+const result = load({ profile: 'prod' });
+console.log(result.origins.PORT);  // { file: '.menv.prod', line: 1, raw: '8080' }
 ```
 
 ---

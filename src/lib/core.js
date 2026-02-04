@@ -11,14 +11,14 @@ const { deepFreeze } = require('./utils');
 
 /**
  * Build a new parsing state container.
- * @returns {{values: object, origins: object, seen: Set<string>}}
+ * @returns {{values: object, origins: object, seenPerFile: Map<string, Set<string>>}}
  */
 function buildState()
 {
     return {
         values: {},
         origins: {},
-        seen: new Set()
+        seenPerFile: new Map()
     };
 }
 
@@ -79,7 +79,8 @@ function load(options = {})
                 schema: normalizedSchema,
                 strict,
                 cast,
-                onWarning: options.onWarning
+                onWarning: options.onWarning,
+                debug: options.debug
             }, filePath);
         }
         readFiles.push(filePath);

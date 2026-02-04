@@ -47,6 +47,18 @@ test('load rejects duplicates in strict mode', () =>
     assert.throws(() => load({ cwd: dir, strict: true }));
 });
 
+test('load allows cross-file overrides in strict mode', () =>
+{
+    const dir = makeTempDir();
+    fs.writeFileSync(path.join(dir, '.menv'), 'PORT=3000\nDEBUG=false');
+    fs.writeFileSync(path.join(dir, '.menv.prod'), 'PORT=8080');
+
+    const result = load({ cwd: dir, profile: 'prod', strict: true });
+
+    assert.strictEqual(result.parsed.PORT, 8080);
+    assert.strictEqual(result.parsed.DEBUG, false);
+});
+
 test('load enforces required schema keys', () =>
 {
     const dir = makeTempDir();
