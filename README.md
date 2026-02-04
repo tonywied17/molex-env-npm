@@ -1,7 +1,7 @@
 # molex-env-npm
 
-[![npm](https://img.shields.io/npm/v/molex-env)](https://www.npmjs.com/package/molex-env-npm)
-[![downloads](https://img.shields.io/npm/dm/molex-env)](https://www.npmjs.com/package/molex-env-npm)
+[![npm](https://img.shields.io/npm/v/molex-env)](https://www.npmjs.com/package/molex-env)
+[![downloads](https://img.shields.io/npm/dm/molex-env)](https://www.npmjs.com/package/molex-env)
 [![license](https://img.shields.io/npm/l/molex-env)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D14-brightgreen.svg)](https://nodejs.org)
 [![deps](https://img.shields.io/badge/dependencies-0-success.svg)](package.json)
