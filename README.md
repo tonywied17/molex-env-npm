@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/logo.svg" alt="molex-env logo" width="120" height="120">
+  <img src="docs/images/logo.svg" alt="molex-env logo" width="222" height="222">
 </p>
 
 <h1 align="center">molex-env-npm</h1>
